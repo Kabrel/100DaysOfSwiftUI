@@ -9,10 +9,16 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var showingScore = false
+    @State private var scoreNumber = 0
     @State private var gameEnd = false
+    
     @State private var scoreTitle = ""
     @State private var endTitle = ""
-    @State private var scoreNumber = 0
+    
+    @State private var userPressedBtn = 0
+    
+    @State private var animationAmount = 0.0
+    @State private var animationOpacity = 1.0
     
     @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
@@ -43,13 +49,28 @@ struct ContentView: View {
                     
                     ForEach(0..<3) { number in
                         Button {
+                            userPressedBtn = number
                             flagTapped(number)
+                            withAnimation(
+                                .interpolatingSpring(stiffness: 10, damping: 5)) {
+                                animationAmount += 360
+                                animationOpacity = 0.25
+                            }
                         } label: {
                             Image("\(countries[number])")
                                 .renderingMode(.original)
                                 .clipShape(Capsule())
                                 .shadow(radius: 5)
                         }
+                        .rotation3DEffect(
+                            .degrees(userPressedBtn == number ? animationAmount : 0),
+                            axis: (x: 0, y: 1, z: 0)
+                        )
+                        .rotation3DEffect(
+                            .degrees(userPressedBtn != number ? -animationAmount : 0 ),
+                            axis: (x: 1, y: 0, z: 0)
+                        )
+                        .opacity(userPressedBtn != number ? animationOpacity : 1)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -103,6 +124,8 @@ struct ContentView: View {
     func askQuestion() {
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
+        animationAmount = 0
+        animationOpacity = 1
     }
     
     func restartGame() {
